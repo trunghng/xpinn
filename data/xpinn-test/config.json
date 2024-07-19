@@ -1,0 +1,29 @@
+{
+    "model_path":	"data/xpinn-train/model.pth",
+    "exp_name":	"xpinn-test",
+    "seed":	0,
+    "layers":	[
+        [
+            2,
+            30,
+            30,
+            1
+        ],
+        [
+            2,
+            20,
+            20,
+            20,
+            20,
+            1
+        ],
+        [
+            2,
+            25,
+            25,
+            25,
+            1
+        ]
+    ],
+    "mode":	"test"
+}
