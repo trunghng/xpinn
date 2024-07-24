@@ -14,9 +14,9 @@ from utils import ftensor, plot_loss
 from network import XPINN
 
 
-def train(Xb: List[Tuple[np.ndarray, np.ndarray]], ub: List[np.ndarray],
-        Xf: List[Tuple[np.ndarray, np.ndarray]], Xi: List[Tuple[np.ndarray, np.ndarray]],
-        interfaces: List[Tuple[int, int]], fs: List[Callable],
+def train(Xb: List[Tuple[torch.Tensor, torch.Tensor]], ub: List[torch.Tensor],
+        Xf: List[Tuple[torch.Tensor, torch.Tensor]], Xi: List[Tuple[torch.Tensor, torch.Tensor]],
+        interfaces: List[Tuple[int, int]], f: Callable, f_aug_args: List[any],
         layers: List[List[int]], W_u: float, W_F: float, W_I: float, W_IF: float,
         epochs: int, lr: float, verbose: bool, save_model: bool, log_dir: str):
     model = XPINN(layers, [nn.Tanh] * len(layers))
@@ -39,7 +39,7 @@ def train(Xb: List[Tuple[np.ndarray, np.ndarray]], ub: List[np.ndarray],
 
     for ep in range(epochs):
         u_preds = [model.subnets[q](Xb[q]) if Xb[q] else None for q in range(N_sd)]
-        f_preds = [fs[q](model.subnets[q], Xf[q][0], Xf[q][1]) for q in range(N_sd)]
+        f_preds = [f(model.subnets[q], Xf[q][0], Xf[q][1], *f_aug_args) for q in range(N_sd)]
         ui_preds = [{
             p: model.subnets[p](Xi[i]),
             q: model.subnets[q](Xi[i])
@@ -59,14 +59,12 @@ def train(Xb: List[Tuple[np.ndarray, np.ndarray]], ub: List[np.ndarray],
         loss = sum(losses_)
         loss.backward(retain_graph=True)
         opt.step()
-
-        losses_.append(loss)
         losses.append(list(map(lambda x: x.item(), losses_)))
 
         if verbose:
             log = f'Epoch {ep + 1:3d}'
             for q in range(N_sd):
-                log += f'\tSubnet{q + 1} loss {losses[-1][q]:,.5f}'
+                log += f' | Subnet{q + 1} loss {losses[-1][q]:,.5f}'
             print(log)
 
     plot_loss(np.asarray(losses).T, [f'subnet{i + 1} loss' for i in range(N_sd)] + ['total loss'],
@@ -75,47 +73,34 @@ def train(Xb: List[Tuple[np.ndarray, np.ndarray]], ub: List[np.ndarray],
         torch.save(model.state_dict(), osp.join(log_dir, 'model.pth'))
 
 
-def test(xb, yb, x_f1, y_f1, x_f2, y_f2, x_f3, y_f3, x_i1, y_i1, x_i2, y_i2,
-        u_exact, x_total, y_total, layers: List[List[int]], model_path: str, log_dir: str):
-    # Draw exact solution
-    aa1 = np.array([[xb[-1].squeeze(), yb[-1].squeeze()]])
-    aa2 = np.array([[1.8, yb[-1].squeeze()], [+1.8, -1.7], [-1.6, -1.7], [-1.6, 1.55], [1.8, 1.55],[1.8, yb[-1].squeeze()]])
-    aa3 = np.array([xb.squeeze(), yb.squeeze()]).T
-
-    XX = np.vstack((aa3, aa2, aa1))
+def test(Xb, Xf, Xi, x_total, y_total, u_exact, layers: List[List[int]], model_path: str, log_dir: str):
     triang_total = tri.Triangulation(x_total.squeeze(), y_total.squeeze())
- 
-    X_fi1_train_Plot = np.concatenate([x_i1, y_i1], axis=-1)
-    X_fi2_train_Plot = np.concatenate([x_i2, y_i2], axis=-1)
+    X_fi1_train_Plot = np.concatenate(Xi[0], axis=-1)
+    X_fi2_train_Plot = np.concatenate(Xi[1], axis=-1)
     
-    fig, ax = plt.subplots(1, 1)
-    gridspec.GridSpec(1,1)
-    tcf = ax.tricontourf(triang_total, u_exact.squeeze(), 100 ,cmap='jet')
-    ax.add_patch(Polygon(XX, closed=True, fill=True, color='w', edgecolor = 'w'))
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 5))
+    # Draw exact solution
+    tcf = ax1.tricontourf(triang_total, u_exact.squeeze(), 100 ,cmap='jet')
     tcbar = fig.colorbar(tcf)
     tcbar.ax.tick_params(labelsize=10)
-    ax.set_xlabel('x')
-    ax.set_ylabel('y')
-    ax.set_title('u (exact)')
-    plt.plot(X_fi1_train_Plot[:,0:1], X_fi1_train_Plot[:,1:2], 'w-', markersize =2, label='Interface Pts')
-    plt.plot(X_fi2_train_Plot[:,0:1], X_fi2_train_Plot[:,1:2], 'w-', markersize =2, label='Interface Pts')
-    plt.savefig(osp.join(log_dir, 'exact_sol.png'))
+    ax1.set_xlabel('x')
+    ax1.set_ylabel('y')
+    ax1.set_title('u (exact)')
+    ax1.plot(X_fi1_train_Plot[:,0:1], X_fi1_train_Plot[:,1:2], 'w-', markersize=2)
+    ax1.plot(X_fi2_train_Plot[:,0:1], X_fi2_train_Plot[:,1:2], 'w-', markersize=2)
 
     # Draw predict solution
     model = XPINN(layers, [nn.Tanh] * len(layers))
     model.load_state_dict(torch.load(model_path))
-    u_preds = model.predict([[x_f1, y_f1], [x_f2, y_f2], [x_f3, y_f3]])
+    u_preds = model.predict(Xf)
     u_preds = np.concatenate(u_preds)
 
-    fig, ax = plt.subplots(1, 1)
-    gridspec.GridSpec(1,1)
-    tcf = ax.tricontourf(triang_total, u_preds.squeeze(), 100 ,cmap='jet')
-    ax.add_patch(Polygon(XX, closed=True, fill=True, color='w', edgecolor = 'w'))
+    tcf = ax2.tricontourf(triang_total, u_preds.squeeze(), 100 ,cmap='jet')
     tcbar = fig.colorbar(tcf)
     tcbar.ax.tick_params(labelsize=10)
-    ax.set_xlabel('x')
-    ax.set_ylabel('y')
-    ax.set_title('u (predict)')
-    plt.plot(X_fi1_train_Plot[:,0:1], X_fi1_train_Plot[:,1:2], 'w-', markersize =2, label='Interface Pts')
-    plt.plot(X_fi2_train_Plot[:,0:1], X_fi2_train_Plot[:,1:2], 'w-', markersize =2, label='Interface Pts')
-    plt.savefig(osp.join(log_dir, 'pred_sol.png'))
+    ax2.set_xlabel('x')
+    ax2.set_ylabel('y')
+    ax2.set_title('u (predict)')
+    ax2.plot(X_fi1_train_Plot[:,0:1], X_fi1_train_Plot[:,1:2], 'w-', markersize=2)
+    ax2.plot(X_fi2_train_Plot[:,0:1], X_fi2_train_Plot[:,1:2], 'w-', markersize=2)
+    plt.savefig(osp.join(log_dir, 'solution.png'))

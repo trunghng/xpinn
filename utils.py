@@ -1,4 +1,5 @@
-from typing import List
+from typing import List, Tuple
+import random
 
 import numpy as np
 import torch
@@ -7,11 +8,17 @@ import scipy
 import matplotlib.pyplot as plt
 
 
+def set_seed(seed: int):
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+
+
 def ftensor(x, requires_grad: bool=False):
     return torch.tensor(x, dtype=torch.float32, requires_grad=requires_grad)
 
 
-def load_dataset():
+def load_default_dataset():
     data = scipy.io.loadmat('./dataset/XPINN_2D_PoissonEqn.mat')
 
     xb = data['xb'].T
@@ -28,42 +35,55 @@ def load_dataset():
     x_i2 = data['xi2'].T
     y_i2 = data['yi2'].T
     u_exact = data['u_exact'].T
-    x_total =  data['x_total'].T
-    y_total =  data['y_total'].T
+    x_total = data['x_total'].T
+    y_total = data['y_total'].T
 
-    return xb, yb, ub, x_f1, y_f1, x_f2, y_f2, x_f3, y_f3, x_i1,\
-            y_i1, x_i2, y_i2, u_exact, x_total, y_total
+    Xb = [(xb, yb), None, None]
+    ub = [ub, None, None]
+    Xf = [(x_f1, y_f1), (x_f2, y_f2), (x_f3, y_f3)]
+    Xi = [(x_i1, y_i1), (x_i2, y_i2)]
+
+    return Xb, ub, Xf, Xi, x_total, y_total, u_exact
 
 
-def load_training_data(xb, yb, ub, x_f1, y_f1, x_f2, y_f2, x_f3, y_f3, x_i1,\
-                        y_i1, x_i2, y_i2, N_b: int, N_F: int, N_I: int):
-    idx1 = np.random.choice(xb.shape[0], N_b, replace=False)
-    xb_train = ftensor(xb[idx1, :])
-    yb_train = ftensor(yb[idx1, :])
-    ub_train = ftensor(ub[idx1, :])
+def load_dataset():
+    raise NotImplementedError("load_dataset() method not implemented")
 
-    idx2 = np.random.choice(x_f1.shape[0], N_F, replace=False)
-    x_f1_train = ftensor(x_f1[idx2, :], requires_grad=True)
-    y_f1_train = ftensor(y_f1[idx2, :], requires_grad=True)
 
-    idx3 = np.random.choice(x_f2.shape[0], N_F, replace=False)
-    x_f2_train = ftensor(x_f2[idx3, :], requires_grad=True)
-    y_f2_train = ftensor(y_f2[idx3, :], requires_grad=True)
+def load_training_data(
+        Xb: List[Tuple[np.ndarray, np.ndarray]],
+        ub: List[np.ndarray],
+        Xf: List[Tuple[np.ndarray, np.ndarray]],
+        Xi: List[Tuple[np.ndarray, np.ndarray]],
+        N_b: int, N_F: int, N_I: int
+    ):
+    Xb_train, ub_train, Xf_train, Xi_train = [], [], [], []
 
-    idx4 = np.random.choice(x_f3.shape[0], N_F, replace=False)
-    x_f3_train = ftensor(x_f3[idx4, :], requires_grad=True)
-    y_f3_train = ftensor(y_f3[idx4, :], requires_grad=True)
+    for i in range(len(Xb)):
+        if Xb[i]:
+            xb, yb = Xb[i]
+            idx = np.random.choice(xb.shape[0], N_b, replace=False)
+            Xb_train.append((ftensor(xb[idx, :]), ftensor(yb[idx, :])))
+            ub_train.append(ftensor(ub[i][idx, :]))
+        else:
+            Xb_train.append(None)
+            ub_train.append(None)
 
-    idx5 = np.random.choice(x_i1.shape[0], N_I, replace=False)
-    x_i1_train = ftensor(x_i1[idx5, :])
-    y_i1_train = ftensor(y_i1[idx5, :])
+    for i in range(len(Xf)):
+        x_f, y_f = Xf[i]
+        idx = np.random.choice(x_f.shape[0], N_F, replace=False)
+        x_f_train = ftensor(x_f[idx, :], requires_grad=True)
+        y_f_train = ftensor(y_f[idx, :], requires_grad=True)
+        Xf_train.append((x_f_train, y_f_train))
 
-    idx6 = np.random.choice(x_i2.shape[0], N_I, replace=False)
-    x_i2_train = ftensor(x_i2[idx6, :])
-    y_i2_train = ftensor(y_i2[idx6, :])
+    for i in range(len(Xi)):
+        x_i, y_i = Xi[i]
+        idx = np.random.choice(x_i.shape[0], N_I, replace=False)
+        x_i_train = ftensor(x_i[idx, :], requires_grad=True)
+        y_i_train = ftensor(y_i[idx, :], requires_grad=True)
+        Xi_train.append((x_i_train, y_i_train))
 
-    return xb_train, yb_train, ub_train, x_f1_train, y_f1_train, x_f2_train, y_f2_train,\
-                x_f3_train, y_f3_train, x_i1_train, y_i1_train, x_i2_train, y_i2_train
+    return Xb_train, ub_train, Xf_train, Xi_train
 
 
 def flat(x):
