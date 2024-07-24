@@ -8,8 +8,10 @@ pip install -r requirements.txt
 ```
 
 ## Usage
-Code is written to work with the [dataset](./dataset/XPINN_2D_PoissonEqn.mat) provided by the author of XPINN for solving the Poisson's equation
-$$\left(\frac{\partial^2}{\partial x^2}+\frac{\partial^2}{\partial y^2}\right)u(x,y)=e^x+e^y$$
+Code is written to work with the [dataset](./dataset/XPINN_2D_PoissonEqn.mat) provided by the author of XPINN for solving the Poisson's equation:
+```math
+\left(\frac{\partial^2}{\partial x^2}+\frac{\partial^2}{\partial y^2}\right)u(x,y)=e^x+e^y
+```
 To train/test model from the command line, simply run
 ```python
 python main.py [mode] [experiment flags]
