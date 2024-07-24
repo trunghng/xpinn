@@ -104,7 +104,7 @@ def poisson_exp(model, x: torch.Tensor, y: torch.Tensor):
 
 
 def pde():
-    raise NotImplementedError("load_dataset() method not implemented")
+    raise NotImplementedError("pde() method not implemented")
 
 
 def plot_loss(losses: List[List[float]], lossnames: List[str], plot_path: str):
