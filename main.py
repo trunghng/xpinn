@@ -45,13 +45,11 @@ def main():
     set_seed(args.seed)
 
     if args.nondefault_dataset:
-        Xb, ub, Xf, Xi, x_total, y_total = load_dataset()
-        f = None
-        f_aug_args = None
+        Xb, ub, Xf, Xi, x_total, y_total, u_exact = load_dataset()
+        f = pde
     else:
         Xb, ub, Xf, Xi, x_total, y_total, u_exact = load_default_dataset()
         f = poisson_exp
-        f_aug_args = []
     del args.nondefault_dataset
 
     log_dir = os.path.join(os.getcwd(), 'data', args.exp_name) if args.exp_name else f'/tmp/experiments/{str(dt.now())}'
@@ -65,7 +63,7 @@ def main():
     if args.mode == 'train':
         Xb_train, ub_train, Xf_train, Xi_train = load_training_data(Xb, ub, Xf, Xi, args.N_b, args.N_F, args.N_I)
 
-        train(Xb_train, ub_train, Xf_train, Xi_train, args.interfaces, f, f_aug_args,
+        train(Xb_train, ub_train, Xf_train, Xi_train, args.interfaces, f,
             args.layers, args.W_u, args.W_F, args.W_I, args.W_IF, args.epochs,
             args.lr, args.verbose, args.save_model, log_dir)
     else:

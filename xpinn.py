@@ -16,9 +16,8 @@ from network import XPINN
 
 def train(Xb: List[Tuple[torch.Tensor, torch.Tensor]], ub: List[torch.Tensor],
         Xf: List[Tuple[torch.Tensor, torch.Tensor]], Xi: List[Tuple[torch.Tensor, torch.Tensor]],
-        interfaces: List[Tuple[int, int]], f: Callable, f_aug_args: List[any],
-        layers: List[List[int]], W_u: float, W_F: float, W_I: float, W_IF: float,
-        epochs: int, lr: float, verbose: bool, save_model: bool, log_dir: str):
+        interfaces: List[Tuple[int, int]], f: Callable, layers: List[List[int]], W_u: float, W_F: float,
+        W_I: float, W_IF: float, epochs: int, lr: float, verbose: bool, save_model: bool, log_dir: str):
     model = XPINN(layers, [nn.Tanh] * len(layers))
     opt = Adam(model.parameters(), lr=lr)
     loss_fn = nn.MSELoss()
@@ -39,7 +38,7 @@ def train(Xb: List[Tuple[torch.Tensor, torch.Tensor]], ub: List[torch.Tensor],
 
     for ep in range(epochs):
         u_preds = [model.subnets[q](Xb[q]) if Xb[q] else None for q in range(N_sd)]
-        f_preds = [f(model.subnets[q], Xf[q][0], Xf[q][1], *f_aug_args) for q in range(N_sd)]
+        f_preds = [f(model.subnets[q], Xf[q][0], Xf[q][1]) for q in range(N_sd)]
         ui_preds = [{
             p: model.subnets[p](Xi[i]),
             q: model.subnets[q](Xi[i])
