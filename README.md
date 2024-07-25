@@ -2,7 +2,7 @@
 A (unofficial) Pytorch implementation of Extended Physics-Informed Neural Networks (XPINNs)
 
 ## Setup
-The project is tested under `Python3.11`. Within your virtual env, run the following command to install the required dependencies
+The project is tested under `Python3.10`. Within your virtual env, run the following command to install the required dependencies
 ```bash
 pip install -r requirements.txt
 ```
