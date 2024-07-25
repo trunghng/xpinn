@@ -2,13 +2,13 @@
 A (unofficial) Pytorch implementation of Extended Physics-Informed Neural Networks (XPINNs)
 
 ## Setup
-The project is tested under `Python3.11`. Run the following command to install required dependencies
+The project is tested under `Python3.11`. Within your virtual env, run the following command to install the required dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
 ## Usage
-Code is written to work with the [dataset](./dataset/XPINN_2D_PoissonEqn.mat) provided by the author of XPINN for solving the Poisson's equation:
+Code is written to work specifically with the [dataset](./dataset/XPINN_2D_PoissonEqn.mat) provided by the author of XPINN for solving the Poisson's equation:
 ```math
 \left(\frac{\partial^2}{\partial x^2}+\frac{\partial^2}{\partial y^2}\right)u(x,y)=e^x+e^y
 ```
@@ -20,7 +20,7 @@ For instance,
 ```python
 python main.py train --exp-name xpinn-train --verbose --save-model
 ```
-Specifically, these are experiment flags that can be used for training mode
+To be more specifically, these are experiment flags that can be used for training mode
 ```
 usage: main.py train [-h] [--N-b N_B] [--N-F N_F] [--N-I N_I] [--interfaces INTERFACES [INTERFACES ...]]
                      [--W-u W_U] [--W-F W_F] [--W-I W_I] [--W-IF W_IF] [--epochs EPOCHS] [--lr LR]
@@ -66,7 +66,7 @@ options:
 ```
 
 ### Running with your own problem
-1. Firstly, in `utils.py` you need you define your PDE in `pde()` to replace the default `poisson_exp()` function .
+1. Firstly, in `utils.py` you need to define your PDE in `pde()` to replace the default `poisson_exp()` function .
 2. Next, also  in `utils.py` you will have to implement the `load_dataset()` function.
 3. Lastly, when training/testing the model, you must call the `--nondefault-dataset` tag.
 4. You might have to make some more minor modification depends on your problem.
