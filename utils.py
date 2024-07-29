@@ -1,4 +1,5 @@
 from typing import List, Tuple
+import os.path as osp
 import random
 
 import numpy as np
@@ -18,7 +19,20 @@ def ftensor(x, requires_grad: bool=False):
     return torch.tensor(x, dtype=torch.float32, requires_grad=requires_grad)
 
 
-def load_default_dataset():
+def plot_dataset(xb, yb, x_f1, y_f1, x_f2, y_f2, x_f3, y_f3, x_i1, y_i1, x_i2, y_i2, log_dir: str):
+    fig, ax = plt.subplots()
+    ax.scatter(xb, yb, label='b', s=10)
+    ax.scatter(x_f1, y_f1, label='f1', s=10)
+    ax.scatter(x_f2, y_f2, label='f2', s=10)
+    ax.scatter(x_f3, y_f3, label='f3', s=10)
+    ax.scatter(x_i1, y_i1, label='i1', s=10)
+    ax.scatter(x_i2, y_i2, label='i2', s=10)
+    ax.legend()
+    plt.savefig(osp.join(log_dir, 'data.png'))
+    plt.close()
+
+
+def load_default_dataset(log_dir: str, plot: bool):
     data = scipy.io.loadmat('./dataset/XPINN_2D_PoissonEqn.mat')
 
     xb = data['xb'].T
@@ -42,6 +56,9 @@ def load_default_dataset():
     ub = [ub, None, None]
     Xf = [(x_f1, y_f1), (x_f2, y_f2), (x_f3, y_f3)]
     Xi = [(x_i1, y_i1), (x_i2, y_i2)]
+
+    if plot:
+        plot_dataset(xb, yb, x_f1, y_f1, x_f2, y_f2, x_f3, y_f3, x_i1, y_i1, x_i2, y_i2, log_dir)
 
     return Xb, ub, Xf, Xi, x_total, y_total, u_exact
 

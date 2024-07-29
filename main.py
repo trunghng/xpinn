@@ -37,6 +37,7 @@ def main():
         p.add_argument('--exp-name', type=str, help='Experiment name')
         p.add_argument('--seed', type=int, default=0, help='Seed for RNG')
         p.add_argument('--nondefault-dataset', action='store_true', help='Whether to use the default dataset')
+        p.add_argument('--plot-dataset', action='store_true', help='Whether to plot the dataset')
         p.add_argument('--layers', nargs='+', type=int, action='append',
                         default=[[2, 30, 30, 1], [2, 20, 20, 20, 20, 1], [2, 25, 25, 25, 1]],
                         help='MLP architectures of subnets')
@@ -44,17 +45,18 @@ def main():
     args = parser.parse_args()
     set_seed(args.seed)
 
+    log_dir = os.path.join(os.getcwd(), 'data', args.exp_name) if args.exp_name else f'/tmp/experiments/{str(dt.now())}'
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+
     if args.nondefault_dataset:
         Xb, ub, Xf, Xi, x_total, y_total, u_exact = load_dataset()
         f = pde
     else:
-        Xb, ub, Xf, Xi, x_total, y_total, u_exact = load_default_dataset()
+        Xb, ub, Xf, Xi, x_total, y_total, u_exact = load_default_dataset(log_dir, args.plot_dataset)
         f = poisson_exp
     del args.nondefault_dataset
 
-    log_dir = os.path.join(os.getcwd(), 'data', args.exp_name) if args.exp_name else f'/tmp/experiments/{str(dt.now())}'
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
     output = json.dumps(vars(args), separators=(',',':\t'), indent=4)
     print('Experiment config:\n', output)
     with open(os.path.join(log_dir, 'config.json'), 'w') as out:
