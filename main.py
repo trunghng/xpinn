@@ -24,7 +24,7 @@ def main():
     train_parser.add_argument('--W-F', type=float, default=1, help='Residual weight')
     train_parser.add_argument('--W-I', type=float, default=20, help='Average solution continuity weight')
     train_parser.add_argument('--W-IF', type=float, default=1, help='Residual continuity weight along the interface')
-    train_parser.add_argument('--epochs', type=int, default=1000, help='Number of epochs')
+    train_parser.add_argument('--epochs', type=int, default=2000, help='Number of epochs')
     train_parser.add_argument('--lr', type=float, default=1e-3, help='Learning rate')
     train_parser.add_argument('--verbose', action='store_true', help='Whether to display training log')
     train_parser.add_argument('--log-freq', type=int, default=10, help='Logging frequency')
