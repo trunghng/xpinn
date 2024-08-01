@@ -72,29 +72,27 @@ def load_training_data(
         ub: List[np.ndarray],
         Xf: List[Tuple[np.ndarray, np.ndarray]],
         Xi: List[Tuple[np.ndarray, np.ndarray]],
-        N_b: int, N_F: int, N_I: int
+        N_bs: List[int], N_Fs: List[int], N_Is: List[int]
     ):
     Xb_train, ub_train, Xf_train, Xi_train = [], [], [], []
 
     for i in range(len(Xb)):
         if Xb[i]:
             xb, yb = Xb[i]
-            idx = np.random.choice(xb.shape[0], N_b, replace=False)
+            idx = np.random.choice(xb.shape[0], N_bs[i], replace=False)
             Xb_train.append((ftensor(xb[idx, :]), ftensor(yb[idx, :])))
             ub_train.append(ftensor(ub[i][idx, :]))
         else:
             Xb_train.append(None)
             ub_train.append(None)
 
-    for i in range(len(Xf)):
-        x_f, y_f = Xf[i]
+    for (x_f, y_f), N_F in zip(Xf, N_Fs):
         idx = np.random.choice(x_f.shape[0], N_F, replace=False)
         x_f_train = ftensor(x_f[idx, :], requires_grad=True)
         y_f_train = ftensor(y_f[idx, :], requires_grad=True)
         Xf_train.append((x_f_train, y_f_train))
 
-    for i in range(len(Xi)):
-        x_i, y_i = Xi[i]
+    for (x_i, y_i), N_I in zip(Xi, N_Is):
         idx = np.random.choice(x_i.shape[0], N_I, replace=False)
         x_i_train = ftensor(x_i[idx, :], requires_grad=True)
         y_i_train = ftensor(y_i[idx, :], requires_grad=True)

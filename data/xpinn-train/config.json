@@ -1,7 +1,16 @@
 {
-    "N_b":	200,
-    "N_F":	1000,
-    "N_I":	100,
+    "N_bs":	[
+        200
+    ],
+    "N_Fs":	[
+        5000,
+        1800,
+        1200
+    ],
+    "N_Is":	[
+        100,
+        100
+    ],
     "interfaces":	[
         [
             0,
@@ -16,13 +25,14 @@
     "W_F":	1,
     "W_I":	20,
     "W_IF":	1,
-    "epochs":	1000,
-    "lr":	0.0008,
+    "epochs":	2000,
+    "lr":	0.001,
     "verbose":	true,
+    "log_freq":	10,
     "save_model":	true,
     "exp_name":	"xpinn-train",
     "seed":	0,
-    "plot_dataset":	true,
+    "plot_dataset":	false,
     "layers":	[
         [
             2,
