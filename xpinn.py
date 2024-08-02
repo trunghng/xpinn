@@ -8,7 +8,7 @@ from torch.optim import Adam
 import matplotlib.pyplot as plt
 import matplotlib.tri as tri
 
-from utils import ftensor, plot_loss
+from utils import plot_loss
 from network import XPINN
 
 
@@ -95,9 +95,9 @@ def test(Xb, Xf, Xi, x_total, y_total, u_exact, layers: List[List[int]], model_p
         ax.set_xlabel('x')
         ax.set_ylabel('y')
         ax.set_title(title)
-        ax.plot(X_fi1_train_Plot[:,0:1], X_fi1_train_Plot[:,1:2], 'w-', markersize=2)
-        ax.plot(X_fi2_train_Plot[:,0:1], X_fi2_train_Plot[:,1:2], 'w-', markersize=2)
-    
+        ax.plot(X_fi1_train_Plot[:, 0:1], X_fi1_train_Plot[:, 1:2], 'w-', markersize=2)
+        ax.plot(X_fi2_train_Plot[:, 0:1], X_fi2_train_Plot[:, 1:2], 'w-', markersize=2)
+
     fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(20, 5))
     # Draw exact solution
     _subplot(ax1, u_exact.squeeze(), 'u (exact)')

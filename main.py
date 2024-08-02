@@ -1,11 +1,10 @@
-import argparse, os, json
+import argparse
+import os
+import json
 from datetime import datetime as dt
 
-import numpy as np
-import torch
-
-from utils import set_seed, load_default_dataset, load_dataset, load_training_data, poisson_exp
-from xpinn import *
+from utils import set_seed, load_default_dataset, load_dataset, load_training_data, poisson_exp, pde
+from xpinn import train, test
 
 
 def main():
@@ -14,9 +13,12 @@ def main():
 
     train_parser = mode_parsers.add_parser('train')
     train_parser.set_defaults(mode='train')
-    train_parser.add_argument('--N-bs', nargs='+', type=int, default=[200], help='Number of boundary points in subdomains')
-    train_parser.add_argument('--N-Fs', nargs='+', type=int, default=[5000, 1800, 1200], help='Number of residual points in subdomains')
-    train_parser.add_argument('--N-Is', nargs='+', type=int, default=[100, 100], help='Number of interface points in interfaces')
+    train_parser.add_argument('--N-bs', nargs='+', type=int, default=[200],
+                                help='Number of boundary points in subdomains')
+    train_parser.add_argument('--N-Fs', nargs='+', type=int, default=[5000, 1800, 1200],
+                                help='Number of residual points in subdomains')
+    train_parser.add_argument('--N-Is', nargs='+', type=int, default=[100, 100],
+                                help='Number of interface points in interfaces')
     train_parser.add_argument('--interfaces', nargs='+', type=int, action='append',
                                 default=[[0, 1], [0, 2]], help='Interface list.\
                                 E.g., [[sd1_idx, sd2_idx], [sd1_idx, sd3_idx], [sd3_idx, sd4_idx]]]')
@@ -46,7 +48,8 @@ def main():
     args = parser.parse_args()
     set_seed(args.seed)
 
-    log_dir = os.path.join(os.getcwd(), 'data', args.exp_name) if args.exp_name else f'/tmp/experiments/{str(dt.now())}'
+    log_dir = os.path.join(os.getcwd(), 'data', args.exp_name)\
+        if args.exp_name else f'/tmp/experiments/{str(dt.now())}'
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
 
@@ -58,7 +61,7 @@ def main():
         f = poisson_exp
     del args.nondefault_dataset
 
-    output = json.dumps(vars(args), separators=(',',':\t'), indent=4)
+    output = json.dumps(vars(args), separators=(',', ':\t'), indent=4)
     print('Experiment config:\n', output)
     with open(os.path.join(log_dir, 'config.json'), 'w') as out:
         out.write(output)
